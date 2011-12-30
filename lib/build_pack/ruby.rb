@@ -38,8 +38,7 @@ class BuildPack::Ruby < BuildPack::Base
       install_language_pack_gems
       build_bundler
       create_database_yml
-      # install_binaries
-      # run_assets_precompile_rake_task
+      install_binaries
     end
   end
   
@@ -216,5 +215,33 @@ class BuildPack::Ruby < BuildPack::Base
     @slug_vendor_base ||= run(%q(ruby -e "require 'rbconfig';puts \"vendor/bundle/#{RUBY_ENGINE}/#{RbConfig::CONFIG['ruby_version']}\"")).chomp
   end
   
+  # default set of binaries to install
+  # @return [Array] resulting list
+  def binaries
+    add_node_js_binary
+  end
+
+  # vendors binaries into the slug
+  def install_binaries
+    binaries.each {|binary| install_binary(binary) }
+    Dir["bin/*"].each {|path| run("chmod +x #{path}") }
+  end
+
+  # vendors individual binary into the slug
+  # @param [String] name of the binary package from S3.
+  #   Example: https://s3.amazonaws.com/language-pack-ruby/node-0.4.7.tgz, where name is "node-0.4.7"
+  def install_binary(name)
+    bin_dir = "bin"
+    FileUtils.mkdir_p bin_dir
+    Dir.chdir(bin_dir) do |dir|
+      run("curl #{VENDOR_URL}/#{name}.tgz -s -o - | tar xzf -")
+    end
+  end
+
+  # removes a binary from the slug
+  # @param [String] relative path of the binary on the slug
+  def uninstall_binary(path)
+    FileUtils.rm File.join('bin', File.basename(path)), :force => true
+  end
   
 end
