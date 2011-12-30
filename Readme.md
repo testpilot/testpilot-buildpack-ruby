@@ -2,6 +2,8 @@
 
 This is a TestPilot BuildPack for Ruby, Rails 2.x, and Rails 3.x. It is based on the [Heroku Ruby Buildpack](https://github.com/heroku/heroku-buildpack-ruby) but customised for the unique build environment provided by TestPilot.
 
+The role of the BuildPack is not to execute the build or test routines, rather compile the dependencies unique to this projects architecture inorder to make it buildable under this environment. After a BuildPack completes its compile routine, TestPilot will execute the build plan definited for this project.
+
 ## Flow
 
 TestPilot loads the latest version of the build pack from Github before every test run, because of our heavy use of TDD we are able to live on the edge and provide community contributed fixes and updates to this build pack with almost no turnaround time.
