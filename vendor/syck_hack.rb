@@ -9,6 +9,7 @@
 # All this is so that there is always a YAML::Syck::DefaultKey
 # class no matter if the full yaml library has loaded or not.
 #
+require 'psych'
 
 module YAML
   # In newer 1.9.2, there is a Syck toplevel constant instead of it
