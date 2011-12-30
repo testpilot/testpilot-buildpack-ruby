@@ -1,12 +1,15 @@
 require "build_pack"
+require "fileutils"
 require "pathname"
 require "yaml"
 require "digest/sha1"
 
 Encoding.default_external = Encoding::UTF_8 if defined?(Encoding)
 
-# abstract class that all the Ruby based Language Packs inherit from
+# abstract class that all the Ruby bacsed Language Packs inherit from
 class BuildPack::Base
+  VENDOR_URL = "https://s3.amazonaws.com/heroku-buildpack-ruby"
+  
   attr_reader :build_path, :cache_path
 
   # changes directory to the build_path
@@ -21,31 +24,25 @@ class BuildPack::Base
   end
 
   def self.===(build_path)
-    raise "must subclass"
+    raise NotImplementedError, "must subclass"
   end
 
   # name of the Language Pack
   # @return [String] the result
   def name
-    raise "must subclass"
+    raise NotImplementedError, "must subclass"
   end
 
   # config vars to be set on first push.
   # @return [Hash] the result
   # @not: this is only set the first time an app is pushed to.
   def default_config_vars
-    raise "must subclass"
-  end
-
-  # process types to provide for the app
-  # Ex. for rails we provide a web process
-  # @return [Hash] the result
-  def default_process_types
-    raise "must subclass"
+    raise NotImplementedError, "must subclass"
   end
 
   # this is called to build the slug
   def compile
+    raise NotImplementedError, "must subclass"
   end
   
   # log output
@@ -73,12 +70,27 @@ class BuildPack::Base
   
   private
   
+  # the base PATH environment variable to be used
+  # @return [String] the resulting PATH
+  def default_path
+    "bin:#{slug_vendor_base}/bin:/usr/local/bin:/usr/bin:/bin"
+  end
+  
+  # executes the block without GIT_DIR environment variable removed since it can mess with the current working directory git thinks it's in
+  # param [block] block to be executed in the GIT_DIR free context
+  def allow_git(&blk)
+    git_dir = ENV.delete("GIT_DIR") # can mess with bundler
+    blk.call
+    ENV["GIT_DIR"] = git_dir
+  end
+  
   # sets up the environment variables for the build process
   def setup_language_pack_environment
   end
 
   def log_internal(*args)
     message = build_log_message(args)
+    # puts message
     %x{ logger -p user.notice -t "slugc[$$]" "buildpack-ruby #{message}" }
   end
 
