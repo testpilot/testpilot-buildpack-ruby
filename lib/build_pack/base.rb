@@ -145,6 +145,44 @@ class BuildPack::Base
     $stdout.flush
   end
   
+  # create a Pathname of the cache dir
+  # @return [Pathname] the cache dir
+  def cache_base
+    Pathname.new(cache_path)
+  end
+
+  # removes the the specified
+  # @param [String] relative path from the cache_base
+  def cache_clear(path)
+    target = (cache_base + path)
+    target.exist? && target.rmtree
+  end
+
+  # write cache contents
+  # @param [String] path of contents to store. it will be stored using this a relative path from the cache_base.
+  # @param [Boolean] defaults to true. if set to true, the cache store directory will be cleared before writing to it.
+  def cache_store(path, clear_first=true)
+    cache_clear(path) if clear_first
+    cache_copy path, (cache_base + path)
+  end
+
+  # load cache contents
+  # @param [String] relative path of the cache contents
+  def cache_load(path)
+    cache_copy (cache_base + path), path
+  end
+
+  # copy cache contents
+  # @param [String] source directory
+  # @param [String] destination directory
+  def cache_copy(from, to)
+    return false unless File.exist?(from)
+    FileUtils.mkdir_p File.dirname(to)
+    system("cp -a #{from}/. #{to}")
+  end
   
+  def build_pack_root
+    Pathname.new(File.expand_path("../../../", __FILE__))
+  end
   
 end
