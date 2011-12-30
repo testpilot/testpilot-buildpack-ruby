@@ -10,7 +10,7 @@ module BuildPack
     return nil if args.first.nil?
     Dir.chdir(args.first)
 
-    pack = [ Ruby ].detect do |klass|
+    pack = [ Rails3, Rails2, Ruby ].detect do |klass|
       klass.use?
     end
 
